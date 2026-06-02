@@ -1,0 +1,50 @@
+{
+    "name": "manik/neuro",
+    "description": "A unified AI interface for Laravel — LLMs, embeddings, vector databases, RAG pipelines, agents, and more.",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Manik Mia",
+            "homepage": "https://github.com/dev-manik-mia"
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "laravel/framework": "^11.0|^12.0|^13.0|^14.0",
+        "guzzlehttp/guzzle": "^7.0",
+        "ext-json": "*",
+        "ext-pdo": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0|^12.0|^13.0|^14.0",
+        "pestphp/pest": "^3.0|^4.0"
+    },
+    "suggest": {
+        "openai-php/client": "Required for OpenAI LLM, Embedding, Image, and Speech drivers.",
+        "anthropic-php/anthropic": "Required for Anthropic Claude LLM driver.",
+        "google-gemini-php/client": "Required for Google Gemini LLM and Embedding drivers."
+    },
+    "autoload": {
+        "psr-4": {
+            "Manik\\Neuro\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Manik\\Neuro\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Manik\\Neuro\\NeuroServiceProvider"
+            ],
+            "aliases": {
+                "Neuro": "Manik\\Neuro\\Facades\\Neuro"
+            }
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
