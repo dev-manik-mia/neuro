@@ -8,7 +8,7 @@ class NeuroServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__.'/../config/cortex.php', 'ai');
+        $this->mergeConfigFrom(__DIR__.'/../config/neuro.php', 'ai');
 
         $this->app->singleton(LLM\LLMManager::class, function ($app) {
             return new LLM\LLMManager($app);
@@ -61,8 +61,8 @@ class NeuroServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__.'/../config/cortex.php' => config_path('ai.php'),
-            ], 'cortex-config');
+                __DIR__.'/../config/neuro.php' => config_path('ai.php'),
+            ], 'neuro-config');
 
             $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         }

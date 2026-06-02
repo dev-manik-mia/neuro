@@ -1,10 +1,10 @@
-# Cortex: Laravel AI Framework
+# Neuro: Laravel AI Framework
 
 A unified AI interface for Laravel — LLMs, embeddings, vector databases, RAG pipelines, agents, and more.
 
 [![PHP](https://img.shields.io/badge/PHP-8.3%2B-blue)](https://php.net)
 [![Laravel](https://img.shields.io/badge/Laravel-11.x%20|%2012.x%20|%2013.x-red)](https://laravel.com)
-[![Packagist](https://img.shields.io/badge/packagist-manik/cortex-green)](https://packagist.org/packages/manik/cortex)
+[![Packagist](https://img.shields.io/badge/packagist-manik/neuro-green)](https://packagist.org/packages/manik/neuro)
 
 ---
 
@@ -29,13 +29,13 @@ A unified AI interface for Laravel — LLMs, embeddings, vector databases, RAG p
 ## Installation
 
 ```bash
-composer require manik/cortex
+composer require manik/neuro
 ```
 
 Publish the configuration:
 
 ```bash
-php artisan vendor:publish --tag=cortex-config
+php artisan vendor:publish --tag=neuro-config
 ```
 
 Run migrations (for persistent memory and document storage):
@@ -165,13 +165,13 @@ AI_RATE_LIMIT_DECAY=60
 ## Quick Start
 
 ```php
-use Illuminate\Support\Facades\Cortex;
+use Manik\Neuro\Facades\Neuro;
 ```
 
 ### Chat Completion
 
 ```php
-$response = Cortex::chat()
+$response = Neuro::chat()
     ->provider('openai')
     ->model('gpt-4o')
     ->message('Explain Laravel to a beginner')
@@ -184,7 +184,7 @@ $response = Cortex::chat()
 ### Streaming Chat
 
 ```php
-$stream = Cortex::chat()
+$stream = Neuro::chat()
     ->provider('openai')
     ->message('Write a poem about Laravel')
     ->stream();
@@ -199,7 +199,7 @@ foreach ($stream as $chunk) {
 ### Embeddings
 
 ```php
-$result = Cortex::chat()
+$result = Neuro::chat()
     ->text('The text to embed')
     ->embed('openai');
 
@@ -210,24 +210,24 @@ $result = Cortex::chat()
 Batch embed:
 
 ```php
-$results = Cortex::chat()
+$results = Neuro::chat()
     ->embedBatch(['text one', 'text two', 'text three'], 'openai');
 ```
 
 ### Vector Search
 
 ```php
-$results = Cortex::vector()
+$results = Neuro::vector()
     ->driver('qdrant')
     ->search('my_collection', $vector, ['top_k' => 10]);
 ```
 
 ## LLM Providers
 
-Use the `Cortex::llm()` method to access the LLM manager directly:
+Use the `Neuro::llm()` method to access the LLM manager directly:
 
 ```php
-$driver = Cortex::llm()->driver('openai');
+$driver = Neuro::llm()->driver('openai');
 $response = $driver->chat([['role' => 'user', 'content' => 'Hello!']]);
 ```
 
@@ -246,7 +246,7 @@ $response = $driver->chat([['role' => 'user', 'content' => 'Hello!']]);
 ### Tool Calling
 
 ```php
-$response = Cortex::chat()
+$response = Neuro::chat()
     ->provider('openai')
     ->model('gpt-4o')
     ->message('What is the weather in Paris?')
@@ -289,7 +289,7 @@ OLLAMA_LLM_MODEL=llama3
 ```
 
 ```php
-$response = Cortex::chat()
+$response = Neuro::chat()
     ->provider('ollama')
     ->model('llama3')
     ->message('Hello, how are you?')
@@ -307,7 +307,7 @@ $response = Cortex::chat()
 | Cohere     | `cohere`     | 1024       | `ai.embedding.cohere`    |
 
 ```php
-$vector = Cortex::embedding()
+$vector = Neuro::embedding()
     ->driver('openai')
     ->embed('Your text here');
 ```
@@ -329,7 +329,7 @@ $vector = Cortex::embedding()
 
 ```php
 // Get a vector driver
-$vector = Cortex::vector()->driver('qdrant');
+$vector = Neuro::vector()->driver('qdrant');
 
 // Create a collection
 $vector->createCollection('knowledge', 1536);
@@ -360,10 +360,10 @@ $vector->delete('knowledge', '1');
 CREATE EXTENSION vector;
 
 # Then use in your code
-Cortex::vector()->driver('pgvector')
+Neuro::vector()->driver('pgvector')
     ->createCollection('embeddings', 1536);
 
-Cortex::vector()->driver('pgvector')
+Neuro::vector()->driver('pgvector')
     ->upsert('embeddings', [
         [
             'id' => 'doc_1',
@@ -380,7 +380,7 @@ Cortex::vector()->driver('pgvector')
 docker run -p 6333:6333 qdrant/qdrant
 
 # Then use in your code
-Cortex::vector()->driver('qdrant')
+Neuro::vector()->driver('qdrant')
     ->createCollection('documents', 1536);
 ```
 
@@ -391,7 +391,7 @@ The RAG (Retrieval Augmented Generation) pipeline retrieves relevant context fro
 ### Basic RAG
 
 ```php
-$response = Cortex::rag()
+$response = Neuro::rag()
     ->collection('knowledge_base')
     ->question('What is Laravel?')
     ->answer();
@@ -404,7 +404,7 @@ $response = Cortex::rag()
 ### Using the Pipeline Directly
 
 ```php
-$pipeline = Cortex::rag()->pipeline();
+$pipeline = Neuro::rag()->pipeline();
 
 $response = $pipeline
     ->collection('knowledge_base')
@@ -438,7 +438,7 @@ Answer with sources
 ### Creating an Agent
 
 ```php
-$agent = Cortex::agent('openai')
+$agent = Neuro::agent('openai')
     ->session('user-123')
     ->maxSteps(5)
     ->tool('get_time', function () {
@@ -456,10 +456,9 @@ $result = $agent->run('What time is it?');
 ### Registering Tools via Manager
 
 ```php
-// Manager level
-use Illuminate\Support\Facades\Cortex;
+use Manik\Neuro\Facades\Neuro;
 
-$driver = Cortex::llm()->driver('openai');
+$driver = Neuro::llm()->driver('openai');
 $driver->tools($messages, [
     [
         'type' => 'function',
@@ -492,27 +491,27 @@ $driver->tools($messages, [
 
 ```php
 // Using the memory manager
-Cortex::memory()->driver('session')->add('session-1', [
+Neuro::memory()->driver('session')->add('session-1', [
     'role' => 'user',
     'content' => 'Hello!',
 ]);
 
-$history = Cortex::memory()->driver('session')->get('session-1');
+$history = Neuro::memory()->driver('session')->get('session-1');
 // Returns array of messages, limited by config
 
-Cortex::memory()->driver('session')->clear('session-1');
+Neuro::memory()->driver('session')->clear('session-1');
 ```
 
 ### Persistent Memory
 
 ```php
 // Requires running the migration
-Cortex::memory()->driver('persistent')->add('user-456', [
+Neuro::memory()->driver('persistent')->add('user-456', [
     'role' => 'user',
     'content' => 'Remember my name is John',
 ]);
 
-$history = Cortex::memory()->driver('persistent')->get('user-456');
+$history = Neuro::memory()->driver('persistent')->get('user-456');
 ```
 
 ## Image Generation
@@ -520,7 +519,7 @@ $history = Cortex::memory()->driver('persistent')->get('user-456');
 ### OpenAI DALL-E
 
 ```php
-$result = Cortex::image()
+$result = Neuro::image()
     ->driver('openai')
     ->generate('A serene mountain landscape at sunset', [
         'size' => '1024x1024',
@@ -534,7 +533,7 @@ $result = Cortex::image()
 ### Edit Image
 
 ```php
-$result = Cortex::image()
+$result = Neuro::image()
     ->driver('openai')
     ->edit('/path/to/image.png', 'Add a rainbow to the sky');
 ```
@@ -542,7 +541,7 @@ $result = Cortex::image()
 ### Variations
 
 ```php
-$result = Cortex::image()
+$result = Neuro::image()
     ->driver('openai')
     ->variations('/path/to/image.png', ['n' => 3]);
 ```
@@ -552,7 +551,7 @@ $result = Cortex::image()
 ### Text-to-Speech
 
 ```php
-$audioContent = Cortex::speech()
+$audioContent = Neuro::speech()
     ->driver('openai')
     ->synthesize('Hello, welcome to Laravel AI!', [
         'voice' => 'alloy',
@@ -566,7 +565,7 @@ Storage::put('audio/welcome.mp3', $audioContent);
 ### Speech-to-Text
 
 ```php
-$transcription = Cortex::speech()
+$transcription = Neuro::speech()
     ->driver('openai')
     ->transcribe('/path/to/audio.mp3');
 
@@ -588,14 +587,14 @@ $transcription = Cortex::speech()
 ### Ingest a Document
 
 ```php
-Cortex::rag()->ingestion()
+Neuro::rag()->ingestion()
     ->ingestFromPath(storage_path('docs/laravel-intro.md'), 'knowledge_base');
 ```
 
 ### Ingest Raw Content
 
 ```php
-Cortex::rag()->ingestion()
+Neuro::rag()->ingestion()
     ->ingestRaw('# Laravel\nLaravel is a PHP framework...', 'knowledge_base', [
         'source' => 'manual',
         'author' => 'John',
@@ -612,9 +611,9 @@ Cortex::rag()->ingestion()
 | Sliding Window     | `SlidingWindowChunking`      | Overlapping windows with stride          |
 
 ```php
-use Manik\Cortex\RAG\Chunking\SemanticChunking;
+use Manik\Neuro\RAG\Chunking\SemanticChunking;
 
-Cortex::rag()->ingestion()
+Neuro::rag()->ingestion()
     ->setChunkStrategy(new SemanticChunking)
     ->ingestRaw($markdownContent, 'docs');
 ```
@@ -636,13 +635,13 @@ Stored in Collection
 ### Fake Responses
 
 ```php
-use Illuminate\Support\Facades\Cortex;
+use Manik\Neuro\Facades\Neuro;
 
 // Enable fake mode
-Cortex::fake();
+Neuro::fake();
 
 // All chat calls now return fake responses
-$response = Cortex::chat()
+$response = Neuro::chat()
     ->message('This will not hit the API')
     ->chat();
 
@@ -652,9 +651,9 @@ $response = Cortex::chat()
 ### Fake Embeddings
 
 ```php
-Cortex::fake();
+Neuro::fake();
 
-$result = Cortex::chat()
+$result = Neuro::chat()
     ->text('Test text')
     ->embed('openai');
 
@@ -674,7 +673,7 @@ $result = Cortex::chat()
 | `DocumentIndexed`  | After a document is indexed    | collection, document, chunk_count       |
 
 ```php
-use Manik\Cortex\Events\MessageReceived;
+use Manik\Neuro\Events\MessageReceived;
 
 Event::listen(MessageReceived::class, function (MessageReceived $event) {
     Log::info('LLM call completed', [
@@ -688,7 +687,7 @@ Event::listen(MessageReceived::class, function (MessageReceived $event) {
 ### Observability Configuration
 
 ```php
-// config/cortex.php
+// config/neuro.php
 'observability' => [
     'track_cost' => env('AI_TRACK_COST', false),
     'track_tokens' => env('AI_TRACK_TOKENS', false),
@@ -701,11 +700,11 @@ Event::listen(MessageReceived::class, function (MessageReceived $event) {
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                    Facade (Cortex::)                        │
+│                    Facade (Neuro::)                      │
 ├─────────────────────────────────────────────────────────┤
 │                    AIClient                             │
 ├─────────────────────────────────────────────────────────┤
-│                   CortexManager                       │
+│                   NeuroManager                         │
 ├──────┬──────┬──────┬──────┬──────┬──────┬──────┬───────┤
 │  LLM │Embed │Vector│ Image│Speech│ RAG  │Memory│ Agent │
 │Manager│Mgr   │Mgr   │ Mgr  │ Mgr  │ Mgr  │ Mgr  │       │
@@ -725,25 +724,25 @@ You can register custom drivers at runtime:
 
 ```php
 // Custom LLM driver
-Cortex::llm()->extend('my-provider', function ($app) {
+Neuro::llm()->extend('my-provider', function ($app) {
     return new MyCustomDriver(config('ai.llm.my-provider'));
 });
 
 // Custom embedding driver
-Cortex::embedding()->extend('my-embedder', function ($app) {
+Neuro::embedding()->extend('my-embedder', function ($app) {
     return new MyEmbedder(config('ai.embedding.my-embedder'));
 });
 
 // Custom vector driver
-Cortex::vector()->extend('my-vector-db', function ($app) {
+Neuro::vector()->extend('my-vector-db', function ($app) {
     return new MyVectorDB(config('ai.vector.my-vector-db'));
 });
 ```
 
-Then add the corresponding config to `config/cortex.php` and use it:
+Then add the corresponding config to `config/neuro.php` and use it:
 
 ```php
-$response = Cortex::chat()
+$response = Neuro::chat()
     ->provider('my-provider')
     ->message('Hello')
     ->chat();
