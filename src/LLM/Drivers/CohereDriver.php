@@ -117,6 +117,10 @@ class CohereDriver implements LLMDriver
 
     protected function buildChatPayload(array $messages, array $options): array
     {
+        $systemInstruction = $this->extractSystemInstruction($messages);
+
+        $messages = array_values($messages);
+
         $lastMessage = end($messages);
         $chatHistory = array_slice($messages, 0, -1);
 
@@ -124,6 +128,14 @@ class CohereDriver implements LLMDriver
             'model' => $this->model,
             'message' => $lastMessage['content'] ?? '',
         ], $options);
+
+        if (! empty($this->config['temperature'])) {
+            $payload['temperature'] = (float) $this->config['temperature'];
+        }
+
+        if ($systemInstruction !== null) {
+            $payload['preamble'] = $systemInstruction;
+        }
 
         if (! empty($chatHistory)) {
             $payload['chat_history'] = array_map(function (array $message): array {
@@ -135,6 +147,21 @@ class CohereDriver implements LLMDriver
         }
 
         return $payload;
+    }
+
+    protected function extractSystemInstruction(array &$messages): ?string
+    {
+        foreach ($messages as $i => $message) {
+            if (($message['role'] ?? '') === 'system') {
+                $text = $message['content'] ?? '';
+
+                unset($messages[$i]);
+
+                return $text;
+            }
+        }
+
+        return null;
     }
 
     protected function formatTools(array $tools): array

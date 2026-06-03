@@ -140,6 +140,94 @@ AI_DEFAULT_VECTOR=chroma
 CHROMA_HOST=http://localhost:8000
 ```
 
+### Temperature & Generation Settings
+
+Configure temperature, max tokens, and timeout per provider:
+
+```env
+# OpenAI
+OPENAI_TEMPERATURE=0.7
+OPENAI_MAX_TOKENS=4096
+OPENAI_TIMEOUT=60
+
+# Anthropic
+ANTHROPIC_TEMPERATURE=0.7
+ANTHROPIC_MAX_TOKENS=4096
+
+# Gemini
+GEMINI_TEMPERATURE=0.7
+GEMINI_MAX_TOKENS=4096
+
+# Ollama
+OLLAMA_TEMPERATURE=0.7
+OLLAMA_MAX_TOKENS=4096
+OLLAMA_TIMEOUT=120
+
+# Grok (xAI)
+XAI_TEMPERATURE=0.7
+
+# Mistral
+MISTRAL_TEMPERATURE=0.7
+
+# Cohere
+COHERE_TEMPERATURE=0.7
+```
+
+Override temperature at runtime:
+
+```php
+$response = Neuro::chat()
+    ->provider('openai')
+    ->model('gpt-4o')
+    ->message('Explain Laravel')
+    ->options(['temperature' => 0.3])
+    ->chat();
+```
+
+### System Instructions
+
+Cross-driver support for system prompts. Pass a message with `role: 'system'`:
+
+```php
+$response = Neuro::chat()
+    ->message(['role' => 'system', 'content' => 'You are a helpful assistant.'])
+    ->message('Explain Laravel')
+    ->chat();
+```
+
+The driver automatically handles the provider-specific format:
+
+| Driver     | API Field             |
+|------------|-----------------------|
+| OpenAI     | `messages[].role = system` (native) |
+| Anthropic  | Top-level `system` field           |
+| Gemini     | `systemInstruction` field          |
+| Cohere     | `preamble` field                   |
+| Ollama     | `messages[].role = system` (native) |
+| Grok       | `messages[].role = system` (native) |
+| Mistral    | `messages[].role = system` (native) |
+
+### Embedding Dimensions
+
+Control embedding output dimensions to ensure compatibility with your vector database:
+
+```env
+# OpenAI (default: 1536)
+OPENAI_EMBEDDING_DIMENSIONS=768
+
+# Gemini (default: 768 — use 768 to match Qdrant collections)
+GEMINI_EMBEDDING_DIMENSIONS=768
+
+# Ollama
+OLLAMA_EMBEDDING_DIMENSIONS=4096
+
+# Mistral
+MISTRAL_EMBEDDING_DIMENSIONS=1024
+
+# Cohere
+COHERE_EMBEDDING_DIMENSIONS=1024
+```
+
 ### RAG Configuration
 
 ```env
@@ -298,13 +386,20 @@ $response = Neuro::chat()
 
 ## Embedding Providers
 
-| Provider   | Driver Key   | Dimensions | Config Key              |
-|-----------|--------------|------------|--------------------------|
-| OpenAI     | `openai`     | 1536       | `ai.embedding.openai`    |
-| Ollama     | `ollama`     | 4096       | `ai.embedding.ollama`    |
-| Gemini     | `gemini`     | 768        | `ai.embedding.gemini`    |
-| Mistral    | `mistral`    | 1024       | `ai.embedding.mistral`   |
-| Cohere     | `cohere`     | 1024       | `ai.embedding.cohere`    |
+| Provider   | Driver Key   | Default Dimensions | Config Key              |
+|-----------|--------------|--------------------|--------------------------|
+| OpenAI     | `openai`     | 1536               | `ai.embedding.openai`    |
+| Ollama     | `ollama`     | 4096               | `ai.embedding.ollama`    |
+| Gemini     | `gemini`     | 768                | `ai.embedding.gemini`    |
+| Mistral    | `mistral`    | 1024               | `ai.embedding.mistral`   |
+| Cohere     | `cohere`     | 1024               | `ai.embedding.cohere`    |
+
+Override dimensions via `.env` to match your vector database:
+
+```env
+OPENAI_EMBEDDING_DIMENSIONS=768
+GEMINI_EMBEDDING_DIMENSIONS=768
+```
 
 ```php
 $vector = Neuro::embedding()

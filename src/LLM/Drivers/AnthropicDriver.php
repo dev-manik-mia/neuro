@@ -22,17 +22,16 @@ class AnthropicDriver implements LLMDriver
 
     public function chat(array $messages, array $options = []): array
     {
+        $body = $this->buildBaseBody($messages);
+        $body = array_merge($body, $options);
+
         $response = Http::withHeaders([
             'x-api-key' => $this->config['api_key'],
             'anthropic-version' => '2023-06-01',
             'Content-Type' => 'application/json',
         ])
             ->timeout($this->config['timeout'] ?? 30)
-            ->post($this->baseUrl().'/messages', array_merge([
-                'model' => $this->model,
-                'messages' => $messages,
-                'max_tokens' => $options['max_tokens'] ?? 1024,
-            ], $options));
+            ->post($this->baseUrl().'/messages', $body);
 
         $data = $response->throw()->json();
 
@@ -45,6 +44,10 @@ class AnthropicDriver implements LLMDriver
 
     public function stream(array $messages, array $options = []): iterable
     {
+        $body = $this->buildBaseBody($messages);
+        $body['stream'] = true;
+        $body = array_merge($body, $options);
+
         $response = Http::withHeaders([
             'x-api-key' => $this->config['api_key'],
             'anthropic-version' => '2023-06-01',
@@ -52,12 +55,7 @@ class AnthropicDriver implements LLMDriver
             'Accept' => 'text/event-stream',
         ])
             ->timeout($this->config['timeout'] ?? 30)
-            ->post($this->baseUrl().'/messages', array_merge([
-                'model' => $this->model,
-                'messages' => $messages,
-                'max_tokens' => $options['max_tokens'] ?? 1024,
-                'stream' => true,
-            ], $options));
+            ->post($this->baseUrl().'/messages', $body);
 
         $body = $response->throw()->body();
 
@@ -81,18 +79,17 @@ class AnthropicDriver implements LLMDriver
 
     public function tools(array $messages, array $tools, array $options = []): array
     {
+        $body = $this->buildBaseBody($messages);
+        $body['tools'] = $tools;
+        $body = array_merge($body, $options);
+
         $response = Http::withHeaders([
             'x-api-key' => $this->config['api_key'],
             'anthropic-version' => '2023-06-01',
             'Content-Type' => 'application/json',
         ])
             ->timeout($this->config['timeout'] ?? 30)
-            ->post($this->baseUrl().'/messages', array_merge([
-                'model' => $this->model,
-                'messages' => $messages,
-                'tools' => $tools,
-                'max_tokens' => $options['max_tokens'] ?? 1024,
-            ], $options));
+            ->post($this->baseUrl().'/messages', $body);
 
         $data = $response->throw()->json();
 
@@ -126,6 +123,42 @@ class AnthropicDriver implements LLMDriver
     public function getProvider(): string
     {
         return $this->provider;
+    }
+
+    protected function buildBaseBody(array $messages): array
+    {
+        $body = [
+            'model' => $this->model,
+            'messages' => $messages,
+            'max_tokens' => (int) ($this->config['max_tokens'] ?? 4096),
+        ];
+
+        if (! empty($this->config['temperature'])) {
+            $body['temperature'] = (float) $this->config['temperature'];
+        }
+
+        $systemInstruction = $this->extractSystemInstruction($messages);
+
+        if ($systemInstruction !== null) {
+            $body['system'] = $systemInstruction;
+        }
+
+        return $body;
+    }
+
+    protected function extractSystemInstruction(array &$messages): ?string
+    {
+        foreach ($messages as $i => $message) {
+            if (($message['role'] ?? '') === 'system') {
+                $text = $message['content'] ?? '';
+
+                unset($messages[$i]);
+
+                return $text;
+            }
+        }
+
+        return null;
     }
 
     protected function baseUrl(): string

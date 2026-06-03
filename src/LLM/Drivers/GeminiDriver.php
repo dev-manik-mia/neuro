@@ -22,10 +22,12 @@ class GeminiDriver implements LLMDriver
 
     public function chat(array $messages, array $options = []): array
     {
+        $body = $this->buildBaseBody($messages);
+
+        $body = array_merge($body, $options);
+
         $response = Http::timeout($this->config['timeout'] ?? 30)
-            ->post($this->generateUrl(), array_merge([
-                'contents' => $this->formatMessages($messages),
-            ], $options));
+            ->post($this->generateUrl(), $body);
 
         $data = $response->throw()->json();
 
@@ -38,11 +40,13 @@ class GeminiDriver implements LLMDriver
 
     public function stream(array $messages, array $options = []): iterable
     {
+        $body = $this->buildBaseBody($messages);
+
+        $body = array_merge($body, $options);
+
         $response = Http::withHeaders(['Accept' => 'text/event-stream'])
             ->timeout($this->config['timeout'] ?? 30)
-            ->post($this->streamUrl(), array_merge([
-                'contents' => $this->formatMessages($messages),
-            ], $options));
+            ->post($this->streamUrl(), $body);
 
         $body = $response->throw()->body();
 
@@ -80,11 +84,12 @@ class GeminiDriver implements LLMDriver
             ];
         }
 
+        $body = $this->buildBaseBody($messages);
+        $body['tools'] = $formatted;
+        $body = array_merge($body, $options);
+
         $response = Http::timeout($this->config['timeout'] ?? 30)
-            ->post($this->generateUrl(), array_merge([
-                'contents' => $this->formatMessages($messages),
-                'tools' => $formatted,
-            ], $options));
+            ->post($this->generateUrl(), $body);
 
         $data = $response->throw()->json();
 
@@ -118,6 +123,44 @@ class GeminiDriver implements LLMDriver
     public function getProvider(): string
     {
         return $this->provider;
+    }
+
+    protected function buildBaseBody(array $messages): array
+    {
+        $body = [
+            'contents' => $this->formatMessages($messages),
+            'generationConfig' => [
+                'temperature' => (float) ($this->config['temperature'] ?? 0.7),
+                'maxOutputTokens' => (int) ($this->config['max_tokens'] ?? 4096),
+            ],
+        ];
+
+        $systemInstruction = $this->extractSystemInstruction($messages);
+
+        if ($systemInstruction !== null) {
+            $body['systemInstruction'] = [
+                'parts' => [
+                    ['text' => $systemInstruction],
+                ],
+            ];
+        }
+
+        return $body;
+    }
+
+    protected function extractSystemInstruction(array &$messages): ?string
+    {
+        foreach ($messages as $i => $message) {
+            if (($message['role'] ?? '') === 'system') {
+                $text = $message['content'] ?? '';
+
+                unset($messages[$i]);
+
+                return $text;
+            }
+        }
+
+        return null;
     }
 
     protected function baseUrl(): string

@@ -24,12 +24,18 @@ class OpenAIEmbeddingDriver implements EmbeddingDriver
 
     public function embed(string $text): array
     {
+        $body = [
+            'input' => $text,
+            'model' => $this->model,
+        ];
+
+        if (! empty($this->config['dimensions'])) {
+            $body['dimensions'] = (int) $this->config['dimensions'];
+        }
+
         $response = Http::withToken($this->config['api_key'])
             ->timeout($this->config['timeout'] ?? 30)
-            ->post($this->baseUrl().'/embeddings', [
-                'input' => $text,
-                'model' => $this->model,
-            ]);
+            ->post($this->baseUrl().'/embeddings', $body);
 
         $data = $response->throw()->json();
 
@@ -46,7 +52,25 @@ class OpenAIEmbeddingDriver implements EmbeddingDriver
 
     public function embedBatch(array $texts): array
     {
-        return array_map(fn (string $text) => $this->embed($text), $texts);
+        $body = [
+            'input' => $texts,
+            'model' => $this->model,
+        ];
+
+        if (! empty($this->config['dimensions'])) {
+            $body['dimensions'] = (int) $this->config['dimensions'];
+        }
+
+        $response = Http::withToken($this->config['api_key'])
+            ->timeout($this->config['timeout'] ?? 30)
+            ->post($this->baseUrl().'/embeddings', $body);
+
+        $data = $response->throw()->json();
+
+        return collect($data['data'] ?? [])
+            ->sortBy('index')
+            ->pluck('embedding')
+            ->toArray();
     }
 
     public function dimensions(): int

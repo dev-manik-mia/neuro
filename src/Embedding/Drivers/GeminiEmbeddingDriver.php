@@ -24,14 +24,20 @@ class GeminiEmbeddingDriver implements EmbeddingDriver
 
     public function embed(string $text): array
     {
-        $response = Http::timeout($this->config['timeout'] ?? 30)
-            ->post($this->baseUrl().'/models/'.$this->model.':embedContent?key='.$this->config['api_key'], [
-                'content' => [
-                    'parts' => [
-                        ['text' => $text],
-                    ],
+        $body = [
+            'content' => [
+                'parts' => [
+                    ['text' => $text],
                 ],
-            ]);
+            ],
+        ];
+
+        if (! empty($this->config['dimensions'])) {
+            $body['outputDimensionality'] = (int) $this->config['dimensions'];
+        }
+
+        $response = Http::timeout($this->config['timeout'] ?? 30)
+            ->post($this->baseUrl().'/models/'.$this->model.':embedContent?key='.$this->config['api_key'], $body);
 
         $data = $response->throw()->json();
 
