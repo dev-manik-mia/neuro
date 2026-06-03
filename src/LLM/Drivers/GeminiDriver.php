@@ -155,6 +155,7 @@ class GeminiDriver implements LLMDriver
                 $text = $message['content'] ?? '';
 
                 unset($messages[$i]);
+                $messages = array_values($messages);
 
                 return $text;
             }
