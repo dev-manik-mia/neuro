@@ -139,6 +139,23 @@ MILVUS_TOKEN=your_token
 # Chroma
 AI_DEFAULT_VECTOR=chroma
 CHROMA_HOST=http://localhost:8000
+
+# Vector Collections (optional — overrides the default collection name per driver)
+AI_DEFAULT_VECTOR_COLLECTION=default
+QDRANT_COLLECTION=my_qdrant_collection
+PINECONE_COLLECTION=my_pinecone_index
+PGVECTOR_COLLECTION=my_pgvector_collection
+WEAVIATE_COLLECTION=MyWeaviateClass
+MILVUS_COLLECTION=my_milvus_collection
+CHROMA_COLLECTION=my_chroma_collection
+```
+
+All vector database methods accept a collection name as the first argument. If omitted or `null`, the driver falls back to the per-driver `collection` config, then to `AI_DEFAULT_VECTOR_COLLECTION`, then to `'default'`:
+
+```php
+use Neuro::vector()->driver()->defaultCollection(); // resolves the fallback chain
+Neuro::vector()->upsert('my_collection', $records); // explicit name
+Neuro::vector()->upsert(null, $records);            // uses config fallback
 ```
 
 ### Temperature & Generation Settings

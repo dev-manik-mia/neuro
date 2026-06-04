@@ -4,9 +4,12 @@ namespace Manik\Neuro\Vector\Drivers;
 
 use Illuminate\Support\Facades\Http;
 use Manik\Neuro\Contracts\VectorDriver;
+use Manik\Neuro\Vector\Concerns\HasDefaultCollection;
 
 class MilvusDriver implements VectorDriver
 {
+    use HasDefaultCollection;
+
     protected array $config;
 
     public function __construct(array $config)

@@ -4,9 +4,12 @@ namespace Manik\Neuro\Vector\Drivers;
 
 use Illuminate\Support\Facades\Http;
 use Manik\Neuro\Contracts\VectorDriver;
+use Manik\Neuro\Vector\Concerns\HasDefaultCollection;
 
 class PineconeDriver implements VectorDriver
 {
+    use HasDefaultCollection;
+
     protected array $config;
 
     protected ?string $indexHost = null;

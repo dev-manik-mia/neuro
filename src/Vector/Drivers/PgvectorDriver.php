@@ -4,9 +4,12 @@ namespace Manik\Neuro\Vector\Drivers;
 
 use Illuminate\Support\Facades\DB;
 use Manik\Neuro\Contracts\VectorDriver;
+use Manik\Neuro\Vector\Concerns\HasDefaultCollection;
 
 class PgvectorDriver implements VectorDriver
 {
+    use HasDefaultCollection;
+
     protected array $config;
 
     public function __construct(array $config)

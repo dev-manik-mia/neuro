@@ -18,6 +18,7 @@ return [
         'vector' => env('AI_DEFAULT_VECTOR', 'qdrant'),
         'image' => env('AI_DEFAULT_IMAGE', 'openai'),
         'speech' => env('AI_DEFAULT_SPEECH', 'openai'),
+        'collection' => env('AI_DEFAULT_VECTOR_COLLECTION', 'default'),
     ],
 
     /*
@@ -160,6 +161,7 @@ return [
             'driver' => 'qdrant',
             'host' => env('QDRANT_HOST', 'http://localhost:6333'),
             'api_key' => env('QDRANT_API_KEY'),
+            'collection' => env('QDRANT_COLLECTION'),
             'timeout' => (int) env('QDRANT_TIMEOUT', 30),
         ],
 
@@ -168,6 +170,7 @@ return [
             'api_key' => env('PINECONE_API_KEY'),
             'environment' => env('PINECONE_ENVIRONMENT'),
             'index_host' => env('PINECONE_INDEX_HOST'),
+            'collection' => env('PINECONE_COLLECTION'),
             'timeout' => (int) env('PINECONE_TIMEOUT', 30),
         ],
 
@@ -176,6 +179,7 @@ return [
             'connection' => env('PGVECTOR_CONNECTION', 'pgsql'),
             'table' => env('PGVECTOR_TABLE', 'vector_embeddings'),
             'dimensions' => (int) env('PGVECTOR_DIMENSIONS', 1536),
+            'collection' => env('PGVECTOR_COLLECTION'),
             'timeout' => (int) env('PGVECTOR_TIMEOUT', 30),
         ],
 
@@ -183,6 +187,7 @@ return [
             'driver' => 'weaviate',
             'host' => env('WEAVIATE_HOST', 'http://localhost:8080'),
             'api_key' => env('WEAVIATE_API_KEY'),
+            'collection' => env('WEAVIATE_COLLECTION'),
             'timeout' => (int) env('WEAVIATE_TIMEOUT', 30),
         ],
 
@@ -192,6 +197,7 @@ return [
             'api_key' => env('MILVUS_TOKEN'),
             'username' => env('MILVUS_USERNAME'),
             'password' => env('MILVUS_PASSWORD'),
+            'collection' => env('MILVUS_COLLECTION'),
             'timeout' => (int) env('MILVUS_TIMEOUT', 30),
         ],
 
@@ -200,6 +206,7 @@ return [
             'host' => env('CHROMA_HOST', 'http://localhost:8000'),
             'tenant' => env('CHROMA_TENANT', 'default'),
             'database' => env('CHROMA_DATABASE', 'default'),
+            'collection' => env('CHROMA_COLLECTION'),
             'timeout' => (int) env('CHROMA_TIMEOUT', 30),
         ],
     ],
