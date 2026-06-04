@@ -189,6 +189,7 @@ return [
         'milvus' => [
             'driver' => 'milvus',
             'host' => env('MILVUS_HOST', 'http://localhost:19530'),
+            'api_key' => env('MILVUS_TOKEN'),
             'username' => env('MILVUS_USERNAME'),
             'password' => env('MILVUS_PASSWORD'),
             'timeout' => (int) env('MILVUS_TIMEOUT', 30),

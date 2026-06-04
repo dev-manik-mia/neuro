@@ -18,28 +18,15 @@ class MilvusDriver implements VectorDriver
     {
         $response = Http::withHeaders($this->headers())
             ->timeout($this->config['timeout'] ?? 30)
-            ->post($this->baseUrl().'/api/v1/collection', [
-                'collection_name' => $name,
-                'description' => $options['description'] ?? '',
-                'fields' => [
-                    [
-                        'field_name' => 'id',
-                        'data_type' => 'VarChar',
-                        'is_primary' => true,
-                        'max_length' => 255,
-                    ],
-                    [
-                        'field_name' => 'vector',
-                        'data_type' => 'FloatVector',
-                        'type_params' => [
-                            'dim' => (string) $dimensions,
-                        ],
-                    ],
-                    [
-                        'field_name' => 'metadata',
-                        'data_type' => 'JSON',
-                    ],
-                ],
+            ->post($this->baseUrl().'/v2/vectordb/collections/create', [
+                'collectionName' => $name,
+                'dimension' => $dimensions,
+                'primaryFieldName' => 'id',
+                'idType' => 'Int64',
+                'vectorFieldName' => 'vector',
+                'metricType' => 'COSINE',
+                'autoId' => false,
+                'enableDynamicField' => true,
             ]);
 
         return $response->throw()->json();
@@ -49,8 +36,8 @@ class MilvusDriver implements VectorDriver
     {
         $response = Http::withHeaders($this->headers())
             ->timeout($this->config['timeout'] ?? 30)
-            ->delete($this->baseUrl().'/api/v1/collection', [
-                'collection_name' => $name,
+            ->post($this->baseUrl().'/v2/vectordb/collections/drop', [
+                'collectionName' => $name,
             ]);
 
         return $response->throw()->successful();
@@ -60,7 +47,7 @@ class MilvusDriver implements VectorDriver
     {
         $response = Http::withHeaders($this->headers())
             ->timeout($this->config['timeout'] ?? 30)
-            ->get($this->baseUrl().'/api/v1/collection');
+            ->post($this->baseUrl().'/v2/vectordb/collections/list');
 
         $data = $response->throw()->json();
 
@@ -72,17 +59,22 @@ class MilvusDriver implements VectorDriver
         $rows = [];
 
         foreach ($records as $record) {
-            $rows[] = [
-                'id' => $record['id'],
-                'vector' => $record['values'] ?? $record['vector'],
-                'metadata' => $record['metadata'] ?? $record['payload'] ?? [],
-            ];
+            $payload = $record['metadata'] ?? $record['payload'] ?? [];
+            $row = array_merge(
+                is_array($payload) ? $payload : [],
+                [
+                    'id' => (int) $record['id'],
+                    'vector' => $record['values'] ?? $record['vector'],
+                ],
+            );
+
+            $rows[] = $row;
         }
 
         $response = Http::withHeaders($this->headers())
             ->timeout($this->config['timeout'] ?? 30)
-            ->post($this->baseUrl().'/api/v1/insert', [
-                'collection_name' => $collection,
+            ->post($this->baseUrl().'/v2/vectordb/entities/insert', [
+                'collectionName' => $collection,
                 'data' => $rows,
             ]);
 
@@ -93,12 +85,14 @@ class MilvusDriver implements VectorDriver
     {
         $response = Http::withHeaders($this->headers())
             ->timeout($this->config['timeout'] ?? 30)
-            ->post($this->baseUrl().'/api/v1/search', [
-                'collection_name' => $collection,
-                'vector' => $vector,
+            ->post($this->baseUrl().'/v2/vectordb/entities/search', [
+                'collectionName' => $collection,
+                'data' => [$vector],
+                'annsField' => 'vector',
                 'limit' => $options['top_k'] ?? 10,
-                'params' => $options['params'] ?? [
-                    'metric_type' => $options['metric_type'] ?? 'COSINE',
+                'outputFields' => $options['with_payload'] ?? ['*'],
+                'searchParams' => [
+                    'metricType' => $options['metric_type'] ?? 'COSINE',
                 ],
             ]);
 
@@ -111,9 +105,9 @@ class MilvusDriver implements VectorDriver
 
         $response = Http::withHeaders($this->headers())
             ->timeout($this->config['timeout'] ?? 30)
-            ->post($this->baseUrl().'/api/v1/delete', [
-                'collection_name' => $collection,
-                'filter' => 'id in ['.implode(',', array_map(fn ($v) => "'{$v}'", $ids)).']',
+            ->post($this->baseUrl().'/v2/vectordb/entities/delete', [
+                'collectionName' => $collection,
+                'filter' => 'id in ['.implode(',', array_map(fn ($v) => (int) $v, $ids)).']',
             ]);
 
         return $response->throw()->successful();
@@ -123,8 +117,8 @@ class MilvusDriver implements VectorDriver
     {
         $response = Http::withHeaders($this->headers())
             ->timeout($this->config['timeout'] ?? 30)
-            ->post($this->baseUrl().'/api/v1/collection/stats', [
-                'collection_name' => $collection,
+            ->post($this->baseUrl().'/v2/vectordb/collections/get_stats', [
+                'collectionName' => $collection,
             ]);
 
         $data = $response->throw()->json();
@@ -136,6 +130,7 @@ class MilvusDriver implements VectorDriver
     {
         return [
             'Authorization' => 'Bearer '.($this->config['api_key'] ?? ''),
+            'Content-Type' => 'application/json',
         ];
     }
 

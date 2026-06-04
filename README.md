@@ -131,9 +131,10 @@ PGVECTOR_DIMENSIONS=1536
 AI_DEFAULT_VECTOR=weaviate
 WEAVIATE_HOST=http://localhost:8080
 
-# Milvus
+# Milvus (v2 API)
 AI_DEFAULT_VECTOR=milvus
 MILVUS_HOST=http://localhost:19530
+MILVUS_TOKEN=your_token
 
 # Chroma
 AI_DEFAULT_VECTOR=chroma
